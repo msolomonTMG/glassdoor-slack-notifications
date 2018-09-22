@@ -30,16 +30,16 @@ async function sendGlassdoorReviews () {
       
       for (const review of newReviews) {
         console.log(review.id)
-        if (oldReviews.filter(r => r.glassdoorId === review.id).length > 0) {
-          // this review has been made already
-          console.log('this review has been sent already')
-                    reviewsToSendToSlack.push(review)
-        } else {
-          // send this as part of the slack message and then save it
-          // slack message function here
-          console.log('gotta save this one')
-
-        }
+        reviewsToSendToSlack.push(review)
+        // if (oldReviews.filter(r => r.glassdoorId === review.id).length > 0) {
+        //   // this review has been made already
+        //   console.log('this review has been sent already')
+        // } else {
+        //   // send this as part of the slack message and then save it
+        //   // slack message function here
+        //   console.log('gotta save this one')
+        // 
+        // }
       }
       
       console.log(reviewsToSendToSlack)
