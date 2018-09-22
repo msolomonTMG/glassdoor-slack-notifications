@@ -1,7 +1,6 @@
 const mongoose = require('mongoose')
 const MONGO_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/mongo_test";
 
-
 mongoose.connect(MONGO_URI, function (err, res) {
   if (err) {
   console.log ('ERROR connecting to: ' + MONGO_URI + '. ' + err)
@@ -47,10 +46,8 @@ module.exports = {
     })
   },
   getAllGlassdoorReviews () {
-    console.log('getting existing reviews...')
     return new Promise((resolve, reject) => {
       GlassdoorReview.find({}, function(err, glassdoorReviews) {
-        console.log('got existing reviews...')
         if (err) { return reject(err) }
         return resolve(glassdoorReviews)
       })

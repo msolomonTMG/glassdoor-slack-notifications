@@ -17,6 +17,22 @@ const helpers = {
         }
       }
     }
+  },
+  getThumbUrl (url) {
+    const groupNineLogoUrl = 'https://www.drupal.org/files/styles/grid-3/public/g9.png?itok=hm2kGgmx'
+    const dodoLogoUrl      = 'https://www.thedodo.com/images/dodo/mission-statement/dodo_logo_full.png'
+    const thrillistLogoUrl = 'https://www.thrillist.com/images/thrillist/apple-touch-icon-retina.png'
+    const nowThisLogoUrl   = 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Nowthis_logo16.png'
+    
+    if (url.includes('The-Dodo')) {
+      return dodoLogoUrl
+    } else if (url.includes('Thrillist')) {
+      return thrillistLogoUrl
+    } else if (url.includes('NowThis')) {
+      return nowThisLogoUrl
+    } else {
+      return groupNineLogoUrl
+    }
   }
 }
 
@@ -48,7 +64,7 @@ module.exports = {
               short: false
             }
           ],
-          thumb_url: 'https://www.drupal.org/files/styles/grid-3/public/g9.png?itok=hm2kGgmx', // need to calculate,
+          thumb_url: helpers.getThumbUrl(review.url), // need to calculate,
           footer: review.job,
           ts: moment(review.date).unix()
         }
