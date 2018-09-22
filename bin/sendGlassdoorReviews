@@ -6,8 +6,8 @@ const slack = require('../slack')
 const dayOfWeek = new Date().getDay();
 const isWeekend = (dayOfWeek == 6) || (dayOfWeek == 0); // 6 = Saturday, 0 = Sunday
 
-if (!isWeekend) {
-  return false // TODO: need to change this once it goes live
+if (isWeekend) {
+  return false // only run on weekdays
 } else {
   sendGlassdoorReviews()
 }
