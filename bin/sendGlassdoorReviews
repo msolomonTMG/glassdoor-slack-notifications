@@ -1,0 +1,61 @@
+#!/usr/bin/env node
+const wrapapi = require('../wrapapi')
+const mongo = require('../mongo')
+const slack = require('../slack')
+
+const dayOfWeek = new Date().getDay();
+const isWeekend = (dayOfWeek == 6) || (dayOfWeek == 0); // 6 = Saturday, 0 = Sunday
+
+if (!isWeekend) {
+  return false // do not run this on the weekends
+} else {
+  sendGlassdoorReviews()
+}
+
+async function sendGlassdoorReviews () {
+  console.log('SENDING GDOOR')
+  const newGlassdoorReviews = wrapapi.getNewGlassdoorReviews()
+  const existingGlassdoorReviews = mongo.getAllGlassdoorReviews()
+
+  Promise.all([newGlassdoorReviews, existingGlassdoorReviews])
+    .then(values => {
+      const newReviews = values[0]
+      const oldReviews = values[1]
+      
+      /* for each review, check if we've saved it to mongodb
+         if we did, that means we've sent it to slack already
+         if we  didn't, send to slack and save to mongo */
+      
+      let reviewsToSendToSlack = []
+      
+      for (const review of newReviews) {
+        console.log(review.id)
+        if (oldReviews.filter(r => r.glassdoorId === review.id).length > 0) {
+          // this review has been made already
+          console.log('this review has been sent already')
+                    reviewsToSendToSlack.push(review)
+        } else {
+          // send this as part of the slack message and then save it
+          // slack message function here
+          console.log('gotta save this one')
+
+        }
+      }
+      
+      console.log(reviewsToSendToSlack)
+      slack.sendReviews(reviewsToSendToSlack)
+        .then(success => {
+          reviewsToSendToSlack.forEach((review, index) => {
+            mongo.saveGlassdoorReview(review.id)
+            if (index + 1 === reviewsToSendToSlack.length) {
+              return
+            }
+          })  
+        })
+    })
+  console.log('newGlassdoorReviews')
+  console.log(newGlassdoorReviews)
+
+  console.log('existingGlassdoorReviews')
+  console.log(existingGlassdoorReviews)
+}
