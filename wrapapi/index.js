@@ -51,15 +51,15 @@ module.exports = {
       
       const groupNineReviews = helpers.getReviewsFromPage('Group-Nine', '0.0.6')
       const dodoReviews      = helpers.getReviewsFromPage('dodo', '0.0.1')
+      const thrillistReviews = helpers.getReviewsFromPage('thrillist', '0.0.1')
       
       //const groupNineReviews = helpers.getGroupNineReviews()
       // const dodoReviews      = helpers.getDodoReviews()
       // const thrillistReviews = helpers.getThrillistReviews()
       // const nowThisReviews   = helpers.getNowThisReviews()
       
-      Promise.all([groupNineReviews, dodoReviews])
+      Promise.all([groupNineReviews, dodoReviews, thrillistReviews])
         .then(reviews => {
-          //return resolve(reviews[0])
           return resolve(reviews.reduce((acc, val) => acc.concat(val), [])) // would like to replace with flat() once its available
         })
         .catch(err => {
