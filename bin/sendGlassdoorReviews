@@ -7,13 +7,12 @@ const dayOfWeek = new Date().getDay();
 const isWeekend = (dayOfWeek == 6) || (dayOfWeek == 0); // 6 = Saturday, 0 = Sunday
 
 if (!isWeekend) {
-  return false // do not run this on the weekends
+  return false // TODO: need to change this once it goes live
 } else {
   sendGlassdoorReviews()
 }
 
 async function sendGlassdoorReviews () {
-  console.log('SENDING GDOOR')
   const newGlassdoorReviews = wrapapi.getNewGlassdoorReviews()
   const existingGlassdoorReviews = mongo.getAllGlassdoorReviews()
 
@@ -29,33 +28,28 @@ async function sendGlassdoorReviews () {
       let reviewsToSendToSlack = []
       
       for (const review of newReviews) {
-        console.log(review.id)
-        reviewsToSendToSlack.push(review)
-        // if (oldReviews.filter(r => r.glassdoorId === review.id).length > 0) {
-        //   // this review has been made already
-        //   console.log('this review has been sent already')
-        // } else {
-        //   // send this as part of the slack message and then save it
-        //   // slack message function here
-        //   console.log('gotta save this one')
-        // 
-        // }
+        if (oldReviews.filter(r => r.glassdoorId === review.id).length > 0) {
+          // this review has been made already
+        } else {
+          // send this as part of the slack message and then save it
+          // slack message function here
+          reviewsToSendToSlack.push(review)
+        }
       }
       
-      console.log(reviewsToSendToSlack)
-      slack.sendReviews(reviewsToSendToSlack)
-        .then(success => {
-          reviewsToSendToSlack.forEach((review, index) => {
-            mongo.saveGlassdoorReview(review.id)
-            if (index + 1 === reviewsToSendToSlack.length) {
-              return
-            }
-          })  
-        })
+      // only send to slack if there are new reviews
+      if (reviewsToSendToSlack.length > 0) {
+        slack.sendReviews(reviewsToSendToSlack)
+          .then(success => {
+            reviewsToSendToSlack.forEach((review, index) => {
+              mongo.saveGlassdoorReview(review.id)
+              if (index + 1 === reviewsToSendToSlack.length) {
+                return
+              }
+            })  
+          })
+      } else {
+        return
+      }
     })
-  console.log('newGlassdoorReviews')
-  console.log(newGlassdoorReviews)
-
-  console.log('existingGlassdoorReviews')
-  console.log(existingGlassdoorReviews)
 }
