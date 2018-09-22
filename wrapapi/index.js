@@ -19,10 +19,10 @@ module.exports = {
   getNewGlassdoorReviews () {
     return new Promise((resolve, reject) => {
       
-      const groupNineReviews = helpers.getReviewsFromPage('Group-Nine', '0.0.6')
-      const dodoReviews      = helpers.getReviewsFromPage('dodo', '0.0.1')
-      const thrillistReviews = helpers.getReviewsFromPage('thrillist', '0.0.1')
-      const nowThisReviews   = helpers.getReviewsFromPage('nowthis', '0.0.1')
+      const groupNineReviews = helpers.getReviewsFromPage('Group-Nine', '0.0.7')
+      const dodoReviews      = helpers.getReviewsFromPage('dodo', '0.0.2')
+      const thrillistReviews = helpers.getReviewsFromPage('thrillist', '0.0.2')
+      const nowThisReviews   = helpers.getReviewsFromPage('nowthis', '0.0.2')
       
       Promise.all([groupNineReviews, dodoReviews, thrillistReviews, nowThisReviews])
         .then(reviews => {
