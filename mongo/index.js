@@ -16,11 +16,6 @@ const glassdoorReviewSchema = new mongoose.Schema({
 const GlassdoorReview = mongoose.model('GlassdoorReviews', glassdoorReviewSchema)
 
 module.exports = {
-  deleteAll () {
-    GlassdoorReview.remove({}, function(err, success) {
-      console.log(success)
-    })
-  },
   findByGlassdoorId (glassdoorId) {
     return new Promise((resolve, reject) => {
       GlassdoorReview.findOne({
