@@ -44,6 +44,10 @@ const helpers = {
     } else {
       return groupNineLogoUrl
     }
+  },
+  getReviewContent (data, content) {
+    const contentIndex = data.indexOf(content) + 1
+    return data[contentIndex]
   }
 }
 
@@ -65,12 +69,12 @@ module.exports = {
           fields: [
             {
               title: 'Pros',
-              value: review.pros,
+              value: helpers.getReviewContent(review.pros, 'Pros'),
               short: false
             },
             {
               title: 'Cons',
-              value: review.cons,
+              value: helpers.getReviewContent(review.cons, 'Cons'),
               short: false
             }
           ],
@@ -83,7 +87,7 @@ module.exports = {
         if (review.advice) {
           attachment.fields.push({
             title: 'Advice to Management',
-            value: review.advice,
+            value: helpers.getReviewContent(review.advice, 'Advice to Management'),
             short: false
           })
         }
