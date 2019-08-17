@@ -24,7 +24,7 @@ module.exports = {
       const groupNineReviews = helpers.getReviewsFromPage('Group-Nine', '0.0.9')
       const dodoReviews      = helpers.getReviewsFromPage('dodo', '0.0.3')
       const thrillistReviews = helpers.getReviewsFromPage('thrillist', '0.0.3')
-      const nowThisReviews   = helpers.getReviewsFromPage('nowthis', '0.0.3')
+      const nowThisReviews   = helpers.getReviewsFromPage('nowthis', '0.0.4')
       
       Promise.all([groupNineReviews, dodoReviews, thrillistReviews, nowThisReviews])
         .then(reviews => {
