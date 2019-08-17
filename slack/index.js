@@ -46,60 +46,78 @@ const helpers = {
     }
   },
   getReviewContent (data, content) {
-    const contentIndex = data.indexOf(content) + 1
-    return data[contentIndex]
+    const contentIndex = data.indexOf(content) ? data.indexOf(content) + 1 : null
+    if (contentIndex) {
+      return data[contentIndex]
+    } else {
+      return null
+    }
   }
 }
 
 module.exports = {
   sendReviews (reviews) {
     return new Promise((resolve, reject) => {
-      let attachments = []
+      let blocks = [{
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: 'There are new glassdoor reviews'
+        }
+      }]
       
       for (const review of reviews) {
-        let rating = helpers.parseRating(review.rating)
-        
-        let attachment = {
-          fallback: review.title,
-          color: helpers.determineColor(review.rating),
-          author_name: rating,
-          title: review.title.replace(/"/g, ''), //remove quotes from title
-          title_link: `https://www.glassdoor.com${review.url}`,
-          text: review.employment,
-          fields: [
-            {
-              title: 'Pros',
-              value: helpers.getReviewContent(review.pros, 'Pros'),
-              short: false
+        const pros = helpers.getReviewContent(review.pros, 'Pros')
+        const cons = helpers.getReviewContent(review.cons, 'Cons')
+        const rating = helpers.parseRating(review.rating)
+        const advice = helpers.getReviewContent(review.advice, 'Advice to Management')
+        blocks.push(
+          {
+            type: 'divider'
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*<https://www.glassdoor.com${review.url}|${review.title.replace(/"/g, '')}>*\n${rating}\n\n*Pros*\n${pros}\n\n*Cons*\n${cons}`,
             },
-            {
-              title: 'Cons',
-              value: helpers.getReviewContent(review.cons, 'Cons'),
-              short: false
+            accessory: {
+              type: 'image',
+              image_url: helpers.getThumbUrl(review.url),
+              alt_text: 'brand logo'
             }
-          ],
-          thumb_url: helpers.getThumbUrl(review.url), // need to calculate,
-          footer: review.job,
-          ts: moment(review.date).unix()
+          }
+        )
+        if (advice) {
+          blocks.push(
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `\n\n*Advice to Management*\n${advice}`,
+              }
+            }
+          )
         }
-        
-        // advice to management is optional
-        if (review.advice) {
-          attachment.fields.push({
-            title: 'Advice to Management',
-            value: helpers.getReviewContent(review.advice, 'Advice to Management'),
-            short: false
-          })
-        }
-        
-        attachments.push(attachment)
+        blocks.push(
+          {
+            type: 'context',
+            elements: [
+              {
+                type: 'plain_text',
+                emoji: true,
+                text: `${review.job} • ${moment(review.date).format('MMMM Do, YYYY')}`
+              }
+            ]
+          }
+        )
       }
       
       let options = {
         method: 'post',
         body: {
           text: ':wave: There are new Glassdoor reviews!',
-          attachments: attachments
+          blocks: blocks
         },
         json: true,
         url: process.env.SLACK_HOOK_URL
