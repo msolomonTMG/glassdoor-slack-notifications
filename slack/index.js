@@ -104,7 +104,12 @@ const helpers = {
           {
             type: 'plain_text',
             emoji: true,
-            text: `${author} • ${moment(interview.date).format('MMMM Do, YYYY')}`
+            text: `${author}`
+          },
+          {
+            type: 'plain_text',
+            emoji: true,
+            text: `${moment(interview.date).format('MMMM Do, YYYY')}`
           }
         ]
       }
@@ -152,7 +157,12 @@ const helpers = {
           {
             type: 'plain_text',
             emoji: true,
-            text: `${review.job} • ${moment(review.date).format('MMMM Do, YYYY')}`
+            text: `${review.job}`
+          },
+          {
+            type: 'plain_text',
+            emoji: true,
+            text: `${moment(review.date).format('MMMM Do, YYYY')}`
           }
         ]
       }
