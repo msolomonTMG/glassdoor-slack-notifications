@@ -6,11 +6,12 @@ const slack = require('../slack')
 const dayOfWeek = new Date().getDay();
 const isWeekend = (dayOfWeek == 6) || (dayOfWeek == 0); // 6 = Saturday, 0 = Sunday
 
-if (isWeekend) {
-  return false // only run on weekdays
-} else {
-  sendGlassdoorReviews()
-}
+// if (isWeekend) {
+//   return false // only run on weekdays
+// } else {
+//   sendGlassdoorReviews()
+// }
+sendGlassdoorReviews()
 
 async function sendGlassdoorReviews () {
   const newGlassdoorReviews = wrapapi.getNewGlassdoorReviews()
@@ -39,6 +40,7 @@ async function sendGlassdoorReviews () {
       
       // only send to slack if there are new reviews
       if (reviewsToSendToSlack.length > 0) {
+        console.log('sending to slack...')
         slack.sendReviews(reviewsToSendToSlack)
           .then(success => {
             reviewsToSendToSlack.forEach((review, index) => {

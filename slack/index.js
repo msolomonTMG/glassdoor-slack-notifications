@@ -52,6 +52,112 @@ const helpers = {
     } else {
       return null
     }
+  },
+  formatInterviewOutcomes (outcomes) {
+    let outcomeString = ''
+    let uniqueOutcomes = [...new Set(outcomes)]
+    console.log('uniqueOutcomes', uniqueOutcomes)
+    let validOutcomes = uniqueOutcomes.filter(outcome => {
+      return outcome !== "" && !outcome.includes('Share') && !outcome.includes('Link')
+    })
+    console.log('validOutcomes', validOutcomes)
+    validOutcomes.forEach(outcome => {
+      if (outcome.includes('Positive') || outcome.includes('Easy') || outcome.includes('Accepted Offer')) {
+        outcomeString += `:white_check_mark: ${outcome}  `
+      } else if (outcome.includes('Average') || outcome.includes('Neutral') || outcome.includes('Declined Offer')) {
+        outcomeString += `:warning: ${outcome}  `
+      } else if (outcome.includes('Negative') || outcome.includes('No Offer') || outcome.includes('Difficult')) {
+        outcomeString += `:no_entry: ${outcome}  `
+      }
+    })
+    console.log('outcomeString', outcomeString)
+    return outcomeString
+  },
+  buildInterviewBlocks (interview) {
+    console.log('building interview blocks for ' + interview.title + ' interview')
+    let blocks = []
+    const application = interview.application
+    const review = interview.interview
+    const author = interview.author
+    const outcomes = helpers.formatInterviewOutcomes(interview.outcomes)
+    blocks.push(
+      {
+        type: 'divider'
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*<https://www.glassdoor.com${review.url}|${interview.title.replace(/"/g, '')} Interview>*\n${outcomes}\n\n*Application*\n${application}\n\n*Interview*\n${review}`,
+        },
+        accessory: {
+          type: 'image',
+          image_url: helpers.getThumbUrl(interview.url),
+          alt_text: 'brand logo'
+        }
+      }
+    )
+    blocks.push(
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'plain_text',
+            emoji: true,
+            text: `${author} • ${moment(interview.date).format('MMMM Do, YYYY')}`
+          }
+        ]
+      }
+    )
+    return blocks
+  },
+  buildReviewBlocks (review) {
+    let blocks = []
+    const pros = helpers.getReviewContent(review.pros, 'Pros')
+    const cons = helpers.getReviewContent(review.cons, 'Cons')
+    const rating = helpers.parseRating(review.rating)
+    const advice = helpers.getReviewContent(review.advice, 'Advice to Management')
+    blocks.push(
+      {
+        type: 'divider'
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*<https://www.glassdoor.com${review.url}|${review.title.replace(/"/g, '')}>*\n${rating}\n\n*Pros*\n${pros}\n\n*Cons*\n${cons}`,
+        },
+        accessory: {
+          type: 'image',
+          image_url: helpers.getThumbUrl(review.url),
+          alt_text: 'brand logo'
+        }
+      }
+    )
+    if (advice) {
+      blocks.push(
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `\n\n*Advice to Management*\n${advice}`,
+          }
+        }
+      )
+    }
+    blocks.push(
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'plain_text',
+            emoji: true,
+            text: `${review.job} • ${moment(review.date).format('MMMM Do, YYYY')}`
+          }
+        ]
+      }
+    )
+    return blocks
   }
 }
 
@@ -67,50 +173,11 @@ module.exports = {
       }]
       
       for (const review of reviews) {
-        const pros = helpers.getReviewContent(review.pros, 'Pros')
-        const cons = helpers.getReviewContent(review.cons, 'Cons')
-        const rating = helpers.parseRating(review.rating)
-        const advice = helpers.getReviewContent(review.advice, 'Advice to Management')
-        blocks.push(
-          {
-            type: 'divider'
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*<https://www.glassdoor.com${review.url}|${review.title.replace(/"/g, '')}>*\n${rating}\n\n*Pros*\n${pros}\n\n*Cons*\n${cons}`,
-            },
-            accessory: {
-              type: 'image',
-              image_url: helpers.getThumbUrl(review.url),
-              alt_text: 'brand logo'
-            }
-          }
-        )
-        if (advice) {
-          blocks.push(
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `\n\n*Advice to Management*\n${advice}`,
-              }
-            }
-          )
+        if (review.type === 'interviews') {
+          blocks = blocks.concat(helpers.buildInterviewBlocks(review))
+        } else {
+          blocks = blocks.concat(helpers.buildReviewBlocks(review))
         }
-        blocks.push(
-          {
-            type: 'context',
-            elements: [
-              {
-                type: 'plain_text',
-                emoji: true,
-                text: `${review.job} • ${moment(review.date).format('MMMM Do, YYYY')}`
-              }
-            ]
-          }
-        )
       }
       
       let options = {
@@ -122,9 +189,9 @@ module.exports = {
         json: true,
         url: process.env.SLACK_HOOK_URL
       }
-      
       request(options, function(err, response, body) {
         if (err) { console.log(err); return reject(err) }
+        console.log('resp body', body)
         return resolve(body)
       })
       
