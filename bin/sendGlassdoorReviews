@@ -39,8 +39,6 @@ async function sendGlassdoorReviews () {
       
       // only send to slack if there are new reviews
       if (reviewsToSendToSlack.length > 0) {
-        console.log('sending to slack...')
-        slack.sendReviews(reviewsToSendToSlack)
           .then(success => {
             reviewsToSendToSlack.forEach((review, index) => {
               mongo.saveGlassdoorReview(review.id)
