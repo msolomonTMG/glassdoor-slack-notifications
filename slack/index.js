@@ -54,24 +54,34 @@ const helpers = {
     }
   },
   formatInterviewOutcomes (outcomes) {
-    let outcomeString = ''
+    let outcomeElements = []
     let uniqueOutcomes = [...new Set(outcomes)]
     console.log('uniqueOutcomes', uniqueOutcomes)
     let validOutcomes = uniqueOutcomes.filter(outcome => {
       return outcome !== "" && !outcome.includes('Share') && !outcome.includes('Link')
     })
-    console.log('validOutcomes', validOutcomes)
     validOutcomes.forEach(outcome => {
       if (outcome.includes('Positive') || outcome.includes('Easy') || outcome.includes('Accepted Offer')) {
-        outcomeString += `:white_check_mark: ${outcome}  `
+        outcomeElements.push({
+          type: 'plain_text',
+          emoji: true,
+          text: `:white_check_mark: ${outcome}`
+        })
       } else if (outcome.includes('Average') || outcome.includes('Neutral') || outcome.includes('Declined Offer')) {
-        outcomeString += `:warning: ${outcome}  `
+        outcomeElements.push({
+          type: 'plain_text',
+          emoji: true,
+          text: `:warning: ${outcome}`
+        })
       } else if (outcome.includes('Negative') || outcome.includes('No Offer') || outcome.includes('Difficult')) {
-        outcomeString += `:no_entry: ${outcome}  `
+        outcomeElements.push({
+          type: 'plain_text',
+          emoji: true,
+          text: `:no_entry: ${outcome}`
+        })
       }
     })
-    console.log('outcomeString', outcomeString)
-    return outcomeString
+    return outcomeElements
   },
   buildInterviewBlocks (interview) {
     console.log('building interview blocks for ' + interview.title + ' interview')
@@ -79,6 +89,7 @@ const helpers = {
     const application = interview.application
     const review = interview.interview
     const author = interview.author
+    const questions = interview.questions.split('Answer Question')[0]
     const outcomes = helpers.formatInterviewOutcomes(interview.outcomes)
     blocks.push(
       {
@@ -88,7 +99,18 @@ const helpers = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*<https://www.glassdoor.com${review.url}|${interview.title.replace(/"/g, '')} Interview>*\n${outcomes}\n\n*Application*\n${application}\n\n*Interview*\n${review}`,
+          text: `*<https://www.glassdoor.com${interview.url}|${interview.title.replace(/"/g, '')} Interview>*`,
+        }
+      },
+      {
+        type: 'context',
+        elements: outcomes
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Application Info*\n${application}\n\n*Interview Experience*\n${review}\n\n*Interview Questions*\n${questions}`,
         },
         accessory: {
           type: 'image',
@@ -189,7 +211,7 @@ module.exports = {
           blocks = blocks.concat(helpers.buildReviewBlocks(review))
         }
       }
-      
+      console.log(JSON.stringify(blocks))
       let options = {
         method: 'post',
         body: {
