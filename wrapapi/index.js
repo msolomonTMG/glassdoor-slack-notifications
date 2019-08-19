@@ -1,7 +1,7 @@
 const request = require('request')
 
 const helpers = {
-  getReviewsFromPage (pageName, pageApiVersion) {
+  getReviewsFromPage (pageName, pageApiVersion, type) {
     return new Promise((resolve, reject) => {
       let options = {
         method: 'get',
@@ -9,9 +9,11 @@ const helpers = {
       }
       request(options, function(err, response, body) {
         if (err) { console.log(err); return reject(err) }
-        console.log(pageName)
-        console.log(JSON.parse(body).data)
-        return resolve(JSON.parse(body).data.reviews)
+        let data = JSON.parse(body).data[type]
+        return resolve(data.map(review => {
+          review.type = type
+          return review
+        }))
       })
     })
   }
@@ -20,13 +22,17 @@ const helpers = {
 module.exports = {
   getNewGlassdoorReviews () {
     return new Promise((resolve, reject) => {
+      const groupNineReviews = helpers.getReviewsFromPage('Group-Nine', '0.0.9', 'reviews')
+      const dodoReviews      = helpers.getReviewsFromPage('dodo', '0.0.3', 'reviews')
+      const thrillistReviews = helpers.getReviewsFromPage('thrillist', '0.0.3', 'reviews')
+      const nowThisReviews   = helpers.getReviewsFromPage('nowthis', '0.0.4', 'reviews')
       
-      const groupNineReviews = helpers.getReviewsFromPage('Group-Nine', '0.0.9')
-      const dodoReviews      = helpers.getReviewsFromPage('dodo', '0.0.3')
-      const thrillistReviews = helpers.getReviewsFromPage('thrillist', '0.0.3')
-      const nowThisReviews   = helpers.getReviewsFromPage('nowthis', '0.0.4')
+      const groupNineInterviews = helpers.getReviewsFromPage('Group-Nine-interviews', '0.0.13', 'interviews')
+      const dodoInterviews = helpers.getReviewsFromPage('dodo-interviews', '0.0.2', 'interviews')
+      const thrillistInterviews = helpers.getReviewsFromPage('thrillist-interviews', '0.0.2', 'interviews')
+      const nowThisInterviews = helpers.getReviewsFromPage('nowthis-interviews', '0.0.1', 'interviews')
       
-      Promise.all([groupNineReviews, dodoReviews, thrillistReviews, nowThisReviews])
+      Promise.all([groupNineReviews, dodoReviews, thrillistReviews, nowThisReviews, groupNineInterviews, dodoInterviews, thrillistInterviews, nowThisInterviews])
         .then(reviews => {
           return resolve(reviews.reduce((acc, val) => acc.concat(val), [])) // would like to replace with flat() once its available
         })

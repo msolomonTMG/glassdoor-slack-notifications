@@ -52,6 +52,144 @@ const helpers = {
     } else {
       return null
     }
+  },
+  formatInterviewOutcomes (outcomes) {
+    let outcomeElements = []
+    let uniqueOutcomes = [...new Set(outcomes)]
+    console.log('uniqueOutcomes', uniqueOutcomes)
+    let validOutcomes = uniqueOutcomes.filter(outcome => {
+      return outcome !== "" && !outcome.includes('Share') && !outcome.includes('Link')
+    })
+    validOutcomes.forEach(outcome => {
+      if (outcome.includes('Positive') || outcome.includes('Easy') || outcome.includes('Accepted Offer')) {
+        outcomeElements.push({
+          type: 'plain_text',
+          emoji: true,
+          text: `:white_check_mark: ${outcome}`
+        })
+      } else if (outcome.includes('Average') || outcome.includes('Neutral') || outcome.includes('Declined Offer')) {
+        outcomeElements.push({
+          type: 'plain_text',
+          emoji: true,
+          text: `:warning: ${outcome}`
+        })
+      } else if (outcome.includes('Negative') || outcome.includes('No Offer') || outcome.includes('Difficult')) {
+        outcomeElements.push({
+          type: 'plain_text',
+          emoji: true,
+          text: `:no_entry: ${outcome}`
+        })
+      }
+    })
+    return outcomeElements
+  },
+  buildInterviewBlocks (interview) {
+    console.log('building interview blocks for ' + interview.title + ' interview')
+    let blocks = []
+    const application = interview.application
+    const review = interview.interview
+    const author = interview.author
+    const questions = interview.questions.split('Answer Question')[0]
+    const outcomes = helpers.formatInterviewOutcomes(interview.outcomes)
+    blocks.push(
+      {
+        type: 'divider'
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*<https://www.glassdoor.com${interview.url}|${interview.title.replace(/"/g, '')} Interview>*`,
+        }
+      },
+      {
+        type: 'context',
+        elements: outcomes
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Application Info*\n${application}\n\n*Interview Experience*\n${review}\n\n*Interview Questions*\n${questions}`,
+        },
+        accessory: {
+          type: 'image',
+          image_url: helpers.getThumbUrl(interview.url),
+          alt_text: 'brand logo'
+        }
+      }
+    )
+    blocks.push(
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'plain_text',
+            emoji: true,
+            text: `${author}`
+          },
+          {
+            type: 'plain_text',
+            emoji: true,
+            text: `${moment(interview.date).format('MMMM Do, YYYY')}`
+          }
+        ]
+      }
+    )
+    return blocks
+  },
+  buildReviewBlocks (review) {
+    let blocks = []
+    const pros = helpers.getReviewContent(review.pros, 'Pros')
+    const cons = helpers.getReviewContent(review.cons, 'Cons')
+    const rating = helpers.parseRating(review.rating)
+    const advice = helpers.getReviewContent(review.advice, 'Advice to Management')
+    blocks.push(
+      {
+        type: 'divider'
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*<https://www.glassdoor.com${review.url}|${review.title.replace(/"/g, '')}>*\n${rating}\n\n*Pros*\n${pros}\n\n*Cons*\n${cons}`,
+        },
+        accessory: {
+          type: 'image',
+          image_url: helpers.getThumbUrl(review.url),
+          alt_text: 'brand logo'
+        }
+      }
+    )
+    if (advice) {
+      blocks.push(
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `\n\n*Advice to Management*\n${advice}`,
+          }
+        }
+      )
+    }
+    blocks.push(
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'plain_text',
+            emoji: true,
+            text: `${review.job}`
+          },
+          {
+            type: 'plain_text',
+            emoji: true,
+            text: `${moment(review.date).format('MMMM Do, YYYY')}`
+          }
+        ]
+      }
+    )
+    return blocks
   }
 }
 
@@ -67,52 +205,13 @@ module.exports = {
       }]
       
       for (const review of reviews) {
-        const pros = helpers.getReviewContent(review.pros, 'Pros')
-        const cons = helpers.getReviewContent(review.cons, 'Cons')
-        const rating = helpers.parseRating(review.rating)
-        const advice = helpers.getReviewContent(review.advice, 'Advice to Management')
-        blocks.push(
-          {
-            type: 'divider'
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*<https://www.glassdoor.com${review.url}|${review.title.replace(/"/g, '')}>*\n${rating}\n\n*Pros*\n${pros}\n\n*Cons*\n${cons}`,
-            },
-            accessory: {
-              type: 'image',
-              image_url: helpers.getThumbUrl(review.url),
-              alt_text: 'brand logo'
-            }
-          }
-        )
-        if (advice) {
-          blocks.push(
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `\n\n*Advice to Management*\n${advice}`,
-              }
-            }
-          )
+        if (review.type === 'interviews') {
+          blocks = blocks.concat(helpers.buildInterviewBlocks(review))
+        } else {
+          blocks = blocks.concat(helpers.buildReviewBlocks(review))
         }
-        blocks.push(
-          {
-            type: 'context',
-            elements: [
-              {
-                type: 'plain_text',
-                emoji: true,
-                text: `${review.job} • ${moment(review.date).format('MMMM Do, YYYY')}`
-              }
-            ]
-          }
-        )
       }
-      
+      console.log(JSON.stringify(blocks))
       let options = {
         method: 'post',
         body: {
@@ -122,9 +221,9 @@ module.exports = {
         json: true,
         url: process.env.SLACK_HOOK_URL
       }
-      
       request(options, function(err, response, body) {
         if (err) { console.log(err); return reject(err) }
+        console.log('resp body', body)
         return resolve(body)
       })
       
